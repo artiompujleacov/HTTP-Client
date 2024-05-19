@@ -97,3 +97,13 @@ Pentru a rula programul, trebuie să compilați sursa utilizând un compilator C
 ```bash
 gcc -o client client.c helpers.c requests.c buffer.c parson.c
 ```
+
+După compilare, puteți rula programul cu comanda:
+
+```bash
+./client
+```
+
+## Autor
+
+- **Artiom Pujleacov** 
