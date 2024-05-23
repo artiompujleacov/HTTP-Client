@@ -34,7 +34,7 @@ int main(void)
     char command[20];
     JSON_Value *root_value;
     JSON_Object *root_object;
-    char *token, *serialized_string = NULL;
+    char *token = NULL, *serialized_string = NULL;
     char *cookie = malloc(LINELEN * sizeof(char));
     while (1)
     {
@@ -44,7 +44,7 @@ int main(void)
         {
             if (Logged_in == 1)
             {
-                printf("Esti deja logat!\n");
+                printf("EROARE!Esti deja logat!\n");
                 continue;
             }
             char **data = malloc(1 * sizeof(char *));
@@ -57,9 +57,16 @@ int main(void)
             char password[LINELEN];
 
             printf("username=");
-            scanf("%s", username);
+            fgets(username, LINELEN, stdin);
+            username[strlen(username) - 1] = '\0';
             printf("password=");
-            scanf("%s", password);
+            fgets(password, LINELEN, stdin);
+            password[strlen(password) - 1] = '\0';
+            if(strstr(username," ") != NULL)
+            {
+                printf("EROARE!Username-ul nu poate contine spatii!\n");
+                continue;
+            }
 
             sockfd = open_connection(SERVER_IP, SERVER_PORT, AF_INET, SOCK_STREAM, 0);
 
@@ -68,6 +75,7 @@ int main(void)
 
             serialized_string = json_serialize_to_string_pretty(root_value);
             memcpy(data[0], serialized_string, strlen(serialized_string));
+            data[0][strlen(serialized_string)] = '\0';
 
             message = compute_post_request(SERVER_IP, "/api/v1/tema/auth/register", "application/json", data, 1, NULL, 0, NULL, 0);
 
@@ -76,7 +84,7 @@ int main(void)
 
             if (strstr(response, "error") != NULL)
             {
-                printf("%s\n", "Username-ul e deja folosit!");
+                printf("%s\n", "EROARE!Username-ul e deja folosit!");
             }
             else
             {
@@ -96,11 +104,6 @@ int main(void)
         }
         else if (strcmp(command, "login\n") == 0)
         {
-            if (Logged_in == 1)
-            {
-                printf("Esti deja logat!\n");
-                continue;
-            }
 
             char **data = malloc(1 * sizeof(char *));
             data[0] = malloc(LINELEN * sizeof(char));
@@ -113,9 +116,23 @@ int main(void)
             root_object = json_value_get_object(root_value);
 
             printf("username=");
-            scanf("%s", username);
+            fgets(username, LINELEN, stdin);
+            username[strlen(username) - 1] = '\0';
             printf("password=");
-            scanf("%s", password);
+            fgets(password, LINELEN, stdin);
+            password[strlen(password) - 1] = '\0';
+
+            if (Logged_in == 1)
+            {
+                printf("EROARE!Esti deja logat!\n");
+                continue;
+            }
+
+            if(strstr(username," ") != NULL)
+            {
+                printf("EROARE!Username-ul nu poate contine spatii!\n");
+                continue;
+            }
 
             sockfd = open_connection(SERVER_IP, SERVER_PORT, AF_INET, SOCK_STREAM, 0);
 
@@ -124,21 +141,23 @@ int main(void)
 
             serialized_string = json_serialize_to_string_pretty(root_value);
 
-            memcpy(data[0], serialized_string, strlen(serialized_string));
+            
+            strncpy(data[0], serialized_string, strlen(serialized_string));
+            data[0][strlen(serialized_string)] = '\0';
             message = compute_post_request(SERVER_IP, "/api/v1/tema/auth/login", "application/json", data, 1, NULL, 0, NULL, 0);
 
             send_to_server(sockfd, message);
-            response = receive_from_server(sockfd);
+            response = receive_from_server(sockfd);\
 
             if (strstr(response, "error") != NULL)
             {
                 if (strstr(response, "account") != NULL)
                 {
-                    printf("%s\n", "Acest username nu exista!");
+                    printf("%s\n", "EROARE!Acest username nu exista!");
                 }
                 else
                 {
-                    printf("%s\n", "Credentialele nu sunt bune!");
+                    printf("%s\n", "EROARE!Credentialele nu sunt bune!");
                 }
             }
             else
@@ -171,7 +190,7 @@ int main(void)
         {
             if (Logged_in == 0)
             {
-                printf("Nu esti logat!\n");
+                printf("EROARE!Nu esti logat!\n");
                 continue;
             }
 
@@ -209,19 +228,19 @@ int main(void)
                 printf("%s\n", "Succes!Utilizatorul a intrat in biblioteca");
             }
 
-            free(tokenValue);
-            free(data[0]);
-            free(data);
-            free(cookies[0]);
-            free(cookies);
-
             close_connection(sockfd);
         }
         else if (strcmp(command, "get_books\n") == 0)
         {
             if (Logged_in == 0)
             {
-                printf("Nu esti logat!\n");
+                printf("EROARE!Nu esti logat!\n");
+                continue;
+            }
+
+            if(token==NULL)
+            {
+                printf("EROARE!Trebuie sa intri in biblioteca!\n");
                 continue;
             }
 
@@ -247,7 +266,7 @@ int main(void)
             char *err = strstr(response, "error");
             if (err != NULL)
             {
-                printf("%s\n", "You are not logged in!");
+                printf("%s\n", "EROARE!nu esti logat!");
             }
             else
             {
@@ -264,16 +283,27 @@ int main(void)
         {
             if (Logged_in == 0)
             {
-                printf("Nu esti logat!\n");
+                printf("EROARE!Nu esti logat!\n");
                 continue;
             }
 
+            if(token==NULL)
+            {
+                printf("EROARE!Trebuie sa intri in biblioteca!\n");
+                continue;
+            }
             sockfd = open_connection(SERVER_IP, SERVER_PORT, AF_INET, SOCK_STREAM, 0);
 
             printf("id=");
             char id[LINELEN];
             fgets(id, LINELEN, stdin);
             id[strlen(id) - 1] = '\0';
+
+            if(atoi(id)==0)
+            {
+                printf("EROARE!Id-ul trebuie sa fie un numar!\n");
+                continue;
+            }
             char **data = malloc(1 * sizeof(char *));
             data[0] = malloc(LINELEN * sizeof(char));
             memcpy(data[0], "enter_library", 14);
@@ -307,21 +337,12 @@ int main(void)
 
             free(data[0]);
             free(data);
-            free(cookies[0]);
-            free(cookies);
-            free(tokens[0]);
-            free(tokens);
 
             close_connection(sockfd);
         }
         else if (strcmp(command, "add_book\n") == 0)
         {
-            if (Logged_in == 0)
-            {
-                printf("Nu esti logat!\n");
-                continue;
-            }
-
+            
             sockfd = open_connection(SERVER_IP, SERVER_PORT, AF_INET, SOCK_STREAM, 0);
 
             char author[LINELEN];
@@ -345,9 +366,27 @@ int main(void)
             printf("page_count=");
             fgets(page_count, LINELEN, stdin);
 
+            if (Logged_in == 0)
+            {
+                printf("EROARE!Nu esti logat!\n");
+                continue;
+            }
+
+            if(token==NULL)
+            {
+                printf("EROARE!Trebuie sa intri in biblioteca!\n");
+                continue;
+            }
+
+            if(strcmp(title,"")==0 || strcmp(author,"")==0 || strcmp(genre,"")==0 || strcmp(publisher,"")==0 || strcmp(page_count,"")==0)
+            {
+                printf("EROARE!Toate campurile trebuie completate!\n");
+                continue;
+            }
+
             if (atoi(page_count) == 0)
             {
-                printf("Invalid page count!\n");
+                printf("EROARE!Numarul de pagini trebuie sa fie numar!\n");
                 continue;
             }
 
@@ -365,6 +404,7 @@ int main(void)
             char **data = malloc(1 * sizeof(char *));
             data[0] = malloc(LINELEN * sizeof(char));
             memcpy(data[0], serialized_string, strlen(serialized_string));
+            data[0][strlen(serialized_string)] = '\0';
 
             char **cookies = calloc(1, sizeof(char *));
             cookies[0] = calloc(LINELEN, sizeof(char));
@@ -402,7 +442,7 @@ int main(void)
         {
             if (Logged_in == 0)
             {
-                printf("Nu esti logat!\n");
+                printf("EROARE!Nu esti logat!\n");
                 continue;
             }
 
@@ -436,13 +476,14 @@ int main(void)
             free(data);
 
             Logged_in = 0;
+            token = NULL;
             close_connection(sockfd);
         }
         else if (strcmp(command, "delete_book\n") == 0)
         {
             if (Logged_in == 0)
             {
-                printf("You are not logged in!\n");
+                printf("EROARE!Nu esti logat!\n");
                 continue;
             }
 
@@ -452,6 +493,18 @@ int main(void)
             char id[LINELEN];
             fgets(id, LINELEN, stdin);
             id[strlen(id) - 1] = '\0';
+
+            if(atoi(id)==0)
+            {
+                printf("EROARE!Id-ul trebuie sa fie un numar!\n");
+                continue;
+            }
+
+            if(token==NULL)
+            {
+                printf("EROARE!Trebuie sa intri in biblioteca!\n");
+                continue;
+            }
 
             char **data = malloc(1 * sizeof(char *));
             data[0] = malloc(LINELEN * sizeof(char));
@@ -473,7 +526,6 @@ int main(void)
             message = compute_delete_request(SERVER_IP, url, NULL, cookies, 1, tokens, 1);
 
             send_to_server(sockfd, message);
-            response = receive_from_server(sockfd);
 
             char *err = strstr(response, "error");
             if (err != NULL)
@@ -488,6 +540,7 @@ int main(void)
             close_connection(sockfd);
             free(data[0]);
             free(data);
+            free(url);
         }
         else if (strcmp(command, "exit\n") == 0)
         {

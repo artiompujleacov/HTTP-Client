@@ -28,7 +28,7 @@ Codul este structurat pentru a realiza diverse operațiuni prin intermediul unui
 
 - `stdio.h`, `stdlib.h`, `string.h`: Funcții standard de I/O și gestionare a memoriei.
 - `unistd.h`, `sys/socket.h`, `netinet/in.h`, `netdb.h`, `arpa/inet.h`: Funcții pentru gestionarea conexiunilor de rețea.
-- `parson.h`: O bibliotecă pentru manipularea JSON.
+- `parson.h`: O bibliotecă pentru manipularea JSON ,menționată în enunțul temei.
 - `helpers.h`, `requests.h`, `buffer.h`: Biblioteci definite de utilizator pentru ajutor în construirea și trimiterea cererilor HTTP.
 
 ### Descrierea funcționalităților
